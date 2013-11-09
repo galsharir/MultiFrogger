@@ -505,11 +505,11 @@ CarFactory = {
 
     //Car body
     var path1 = new Path([
-      ['moveTo', [x+1*wPart,0]],
+      ['moveTo', [x,0]],
       ['lineTo', [x+7*wPart,0]],
       ['quadraticCurveTo', [x+6*wPart,h/2, x+7*wPart,h]],
-      ['lineTo', [x+wPart,h]],
-      ['quadraticCurveTo', [x+0,h/2, x+wPart,0]]
+      ['lineTo', [x,h]],
+      ['quadraticCurveTo', [x-wPart,h/2, x,0]]
     ],{
       fill: "#8b4513"
     });
