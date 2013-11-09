@@ -963,15 +963,6 @@ FroggerGame = Klass(CanvasNode, {
     for(var i=0;i<this.logDispatchers.length;i++){
         this.logDispatchers[i].animate(t, dt);
 
-        // Check if the frog got on a log
-        var logs = this.logDispatchers[i].cars;
-        for(var c=0,cc=logs.length;c<cc;c++){
-        for(var j=0;j<this.players.length;j++) {
-          if (NodesCollided(logs[c].node,this.players[j].frog.node)){
-            this.players[j].putFrogOnLog();
-            break;
-          }
-        }
     }
 
       for(var i=0;i<this.carDispatchers.length;i++){
