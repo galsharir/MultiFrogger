@@ -22,20 +22,20 @@ var WIDTH                 = 900
   , CAR_STROKE_WIDTH      = 2
 
   , PLAIN_CAR_WIDTH       = 80
-  , PLAIN_CAR_HEIGHT      = 40
+  , PLAIN_CAR_HEIGHT      = 20
   , PLAIN_CAR_SPEED       = 0.08
   , TRUCK_WIDTH           = 110
-  , TRUCK_HEIGHT          = 40
+  , TRUCK_HEIGHT          = 20
   , TRUCK_SPEED           = 0.06
   , RACECAR_WIDTH         = 80
-  , RACECAR_HEIGHT        = 40
+  , RACECAR_HEIGHT        = 20
   , RACECAR_SPEED         = .12
 
-  , FROG_RECEIVER_HEIGHT  = 50
-  , FROG_RECEIVER_SPACE   = 10
+  , FROG_RECEIVER_HEIGHT  = 25
+  , FROG_RECEIVER_SPACE   = 5
   , FROG_RECEIVER_TOTAL_HEIGHT = FROG_RECEIVER_SPACE + FROG_RECEIVER_HEIGHT
 
-  , NUM_FROG_RECEIVERS    = 5
+  , NUM_FROG_RECEIVERS    = 5 // "Lilys"
 
   , POINTS_FOR_SAFE_FROG  = 100
   , POINTS_FOR_CLEARED_LEVEL = 250
@@ -84,15 +84,15 @@ NodesCollided = function(obj1, obj2){
     return true;
 }
 
-Frog = function(root, x, y) {
+Frog = function(root, player, x, y) {
 
   this.isAlive = true;
-    this.speed = FROG_SPEED;
+    this.speed = FROG_SPEED * Math.random()*2; // TODO: temporary, just so they will be noticed.
     this.initial_points = 0;
     this.points = 0;
   this.animatePosition = 1;
 
-    this.initialize = function(root, x, y) {
+    this.initialize = function(root, player, x, y) {
 
         this.node = new Rectangle(FROG_WIDTH, FROG_HEIGHT);
         this.node.w = FROG_WIDTH;
@@ -114,7 +114,7 @@ Frog = function(root, x, y) {
       ['quadraticCurveTo', [x+5*xPart,y-yPart,    x+4*xPart,y-yPart*2]],
       ['quadraticCurveTo', [x+1*xPart,y-yPart*4,  x+4*xPart,y-yPart*9]],
     ],{
-      fill: FROG_FILL,
+      fill: this.player.color,
       fillOpacity:1
     });
     
@@ -126,7 +126,7 @@ Frog = function(root, x, y) {
       ['lineTo', [x+6*xPart,y-yPart*4]],
       ['lineTo', [x+7*xPart,y-yPart*4]],
     ],{
-      fill: FROG_FILL,
+      fill: this.player.color,
       fillOpacity:1
     });
     
@@ -138,7 +138,7 @@ Frog = function(root, x, y) {
       ['lineTo', [x+4*xPart,y-yPart*4]],
       ['lineTo', [x+3*xPart,y-yPart*4]],
     ],{
-      fill: FROG_FILL,
+      fill: this.player.color,
       fillOpacity:1
     });
 
@@ -159,7 +159,7 @@ Frog = function(root, x, y) {
       ['lineTo', [x+2*xPart,y-yPart*3]],
       ['lineTo', [x+3*xPart,y-yPart*4]],
     ],{
-      fill: FROG_LEGS_FILL,
+      fill: this.player.color,
       fillOpacity:1
     });
 
@@ -224,22 +224,22 @@ Frog = function(root, x, y) {
 
   this.animate = function(t, dt){
 
-    if (this.root.keys["Up"]==1){
+    if (this.player.keys["Up"]==1){
 
       this.handleMove();
       this.up();
 
-    } else if (this.root.keys["Down"]==1){
+    } else if (this.player.keys["Down"]==1){
 
       this.handleMove();
       this.down();
 
-    } else if (this.root.keys["Left"]==1){
+    } else if (this.player.keys["Left"]==1){
 
       this.handleMove();
       this.moveLeft();
 
-    } else if (this.root.keys["Right"]==1){
+    } else if (this.player.keys["Right"]==1){
 
       this.handleMove();
       this.moveRight();
@@ -247,8 +247,9 @@ Frog = function(root, x, y) {
     }
   }
 
+    this.player = player;
     this.root = root;
-    this.initialize(root, x, y);
+    this.initialize(root, player, x, y);
 }
 
 
@@ -264,6 +265,9 @@ CarFactory = {
         break;
       case "PLAINCAR":
         return this._makePlainCar(x,y,direction,color);
+        break;
+      case "TREELOG":
+        return this._makeLog(x,y,direction,color);
         break;
     }
   },
@@ -440,7 +444,6 @@ CarFactory = {
 
     //Car body
     var path1 = new Path([
-      ['moveTo', [x+0,h]],
       ['moveTo', [x+1*wPart,0]],
       ['lineTo', [x+2*wPart,0]],
       ['lineTo', [x+2*wPart,hPart]],
@@ -468,6 +471,46 @@ CarFactory = {
     });
 
     car.append(path1);
+    return car;
+  },
+
+  _makeLog: function(x, y, direction,color){
+    var base_w = PLAIN_CAR_WIDTH
+      , base_h = PLAIN_CAR_HEIGHT
+      , car = this._makeCarWrapper(x,y,base_w,base_h);
+
+    // Reinitialize w / h / x, based on direction
+    var w = (direction=="LEFT") ? base_w : -base_w
+      , h = base_h;
+
+    x = (direction=="LEFT") ? 0 : base_w;
+
+    var wPart = w/7
+      , hPart = h/8;
+
+    //Car body
+    var path1 = new Path([
+      ['moveTo', [x+1*wPart,0]],
+      ['lineTo', [x+6*wPart,0]],
+      ['quadraticCurveTo', [x+5*wPart,h/2, x+6*wPart,h]],
+      ['lineTo', [x+wPart,h]],
+      ['quadraticCurveTo', [x+0,h/2, x+wPart,0]]
+    ],{
+      fill: "#8b4513"
+    });
+
+    car.append(path1);
+
+    //Bottom Left Tire
+    var path2 = new Path([
+        ['moveTo', [x+6*wPart,0]],
+        ['quadraticCurveTo', [x+w,h/2, x+6*wPart,h]],
+     	['quadraticCurveTo', [x+5*wPart,h/2, x+6*wPart,0]],
+      ],{
+        fill:"#cd853f"
+      });
+
+    car.append(path2);
     return car;
   }
 }
@@ -654,13 +697,14 @@ FrogReceiver = function(root,x,y,w,h){
 
 
 Scoreboard = function(root){
-  score: 0;
-  lives: 5;
-  level: 1;
   
   this.initialize = function(root){
-    this.score = 0;
-    this.lives = 5;
+    this.scores = [];
+    this.lives = [];
+    for(var i=0; i< root.players.length; i++) {
+      this.scores.push(0);
+      this.lives.push(1000);
+    }
     this.level = 1;
     
     this.scoreDiv = document.getElementById("score");
@@ -668,37 +712,92 @@ Scoreboard = function(root){
     this.levelDiv = document.getElementById("level");
   }
   
-  this.scoreSafeFrog = function(){
-    this.score += POINTS_FOR_SAFE_FROG;
+  this.scoreSafeFrog = function(pid){
+    this.scores[pid] += POINTS_FOR_SAFE_FROG;
     this.updateStats();
   }
 
-  this.scoreKilledFrog = function(){
-    this.lives -= 1;
-    if (this.lives==0){
+  this.scoreKilledFrog = function(pid){
+    this.lives[pid] -= 1;
+    if (this.lives[pid]==0){
       this.updateStats();
       this.root.endGame();
     }
     this.updateStats();
   }
 
-  this.scoreFinishedLevel = function(){
-    this.score += POINTS_FOR_SAFE_FROG;
-    this.score += POINTS_FOR_CLEARED_LEVEL;
+  this.scoreFinishedLevel = function(pid){
+    this.scores[pid] += POINTS_FOR_SAFE_FROG;
+    this.scores[pid] += POINTS_FOR_CLEARED_LEVEL;
     this.level += 1;
   }
 
   this.updateStats = function(){
-    this.scoreDiv.innerHTML = this.score + "pts";
-    this.livesDiv.innerHTML = "x" + this.lives;
-    this.levelDiv.innerHTML = "Level: " + this.level;
+
+    scoresTxt = "";
+    livesTxt = "";
+    for(var i=0; i< root.players.length; i++) {
+      scoresTxt += root.players[i].name + ": " + this.scores[i] + "pts<br/>";
+      livesTxt += root.players[i].name + ": x" + this.lives[i] + "<br/>";
+    }
+    this.scoreDiv.innerHTML = scoresTxt;
+    this.livesDiv.innerHTML = livesTxt;
+
+    this.levelDiv.innerHTML = this.level;
   }
 
   this.root = root;
   this.initialize(root);
 }
 
+function Player(root, id, name, color) {
+  this.initialize = function(game) {
+    this.addNewFrog(true);
+    this.keys = { "Up" : 0, "Down" : 0, "Left" : 0, "Right" : 0 };
+    this.id = id; // TODO: use this somewhere
+    this.name = name;
+    this.color = color;
+  }
 
+  this.addNewFrog = function(shouldwait){
+    var context = this.game;
+    var player = this;
+    context.paused = true;
+    setTimeout(function(){
+      player.frog = new Frog(context, player, HEIGHT-10, WIDTH/2);
+      context.scoreboard.updateStats();
+      context.paused = false;
+    },shouldwait?1000:0)
+  }
+
+  this.recordDeadFrog = function(){
+    this.frog.runOver();
+    this.game.scoreboard.scoreKilledFrog(this.id);
+    if (this.game.scoreboard.lives[this.id]!=0){
+      this.game.showMessage(this.name + ": " + FROG_DEATH_MESSAGES[Math.floor(Math.random()*FROG_DEATH_MESSAGES.length)],1000);
+      this.addNewFrog(false);
+    }
+  }
+
+  this.recordSafeFrog = function(){
+    this.game.scoreboard.scoreSafeFrog(this.id);
+    // TODO: MOVE frogsLEft to player
+    this.game.frogsLeft -= 1;
+
+    if (this.game.frogsLeft==0){
+      this.game.showMessage("Nice Job...Starting Level " + (this.game.scoreboard.level+1),1000);
+      this.game.nextLevel();
+    } else {
+      this.game.showMessage(FROG_SAFE_MESSAGES[Math.floor(Math.random()*FROG_SAFE_MESSAGES.length)],1000);
+      this.addNewFrog(false);
+    }
+  }
+
+
+  this.game = root;
+  this.initialize(this.game);
+
+}
 FroggerGame = Klass(CanvasNode, {
   paused: false,
 
@@ -716,20 +815,17 @@ FroggerGame = Klass(CanvasNode, {
     
     this.user = null; // Put fbUser here
     
-    // Add the scoreboard
-    this.scoreboard = new Scoreboard(this);
-    
     // number of frogs + targets at the top for frogs to reach
     this.numFrogs = NUM_FROG_RECEIVERS;
     
-    // setup the mapping for catching key presses
-    this.keys = { "Up" : 0, "Down" : 0, "Left" : 0, "Right" : 0, "Ctrl" : 0 };
-
     // show the get ready message while we start things...:
     this.showMessage("Get Ready...",1000);
     
     // Initialize a new game
     this.startGame();
+
+    // Add the scoreboard
+    this.scoreboard = new Scoreboard(this);
   },
 
   setupBg : function() {
@@ -738,21 +834,27 @@ FroggerGame = Klass(CanvasNode, {
     this.bg.zIndex = -1000;
     this.append(this.bg);
 
+    var water = new Rectangle(WIDTH,260);
+    water.fill = new Gradient({ endX:0, endY:25, colorStops:[[1, "#4169e1"], [0, "#4169e1"]] });
+    water.y = 0;
+    this.append(water);
+
+
     var middleGrass = new Rectangle(WIDTH,50);
     middleGrass.fill = new Gradient({ endX:0, endY:50, colorStops:[[1, "#3b4916"], [0, "#4e601d"]] });
-    middleGrass.y = FROG_RECEIVER_TOTAL_HEIGHT + 180;
+    middleGrass.y = FROG_RECEIVER_TOTAL_HEIGHT + 210;
     this.append(middleGrass);
 
     var bottomGrass = new Rectangle(WIDTH,80);
     bottomGrass.fill = new Gradient({ endX:0, endY:80, colorStops:[[1, "#3b4916"], [0, "#4e601d"]]});
-    bottomGrass.y = FROG_RECEIVER_TOTAL_HEIGHT + 360;
+    bottomGrass.y = FROG_RECEIVER_TOTAL_HEIGHT + 390;
     this.append(bottomGrass);
   },
 
   setupMessage : function() {
     // Setup the basic message box we'll use for telling the user stuff
     this.message = document.getElementById("message");
-    this.message.style.top = (FROG_RECEIVER_TOTAL_HEIGHT + 225) + "px";
+    this.message.style.top = (FROG_RECEIVER_TOTAL_HEIGHT + 255) + "px";
     this.message.style.left = WINDOW_WIDTH/2-150 + "px";
   },
   
@@ -767,9 +869,14 @@ FroggerGame = Klass(CanvasNode, {
   },
     
   startGame: function() {
-    this.addNewFrog();
+    this.players = [];
+    this.players.push(new Player(this, 0, "Jon", "#ff0000"));
+    this.players.push(new Player(this, 1, "Rob", "#00ff00"));
+    this.players.push(new Player(this, 2, "Eddard", "#0000ff"));
     
+
     this.carDispatchers = [];
+    this.logDispatchers = [];
     this.frogReceivers = [];
     this.frogsLeft = this.numFrogs;
 
@@ -784,14 +891,18 @@ FroggerGame = Klass(CanvasNode, {
     
     
     // Instantiate the Car Dispatchers on top (not actually drawn on canvas, just placeholders where the cars come from)
-    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT , RACECAR_SPEED, "LEFT","RACECAR"));
-    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 60,TRUCK_SPEED, "LEFT","TRUCK"));
-    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 120,PLAIN_CAR_SPEED, "LEFT","PLAINCAR"));
-    
+    this.logDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 30, RACECAR_SPEED, "LEFT","TREELOG"));
+    this.logDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 60, RACECAR_SPEED, "RIGHT","TREELOG"));
+    this.logDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 90,TRUCK_SPEED, "LEFT","TREELOG"));
+    this.logDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 120,TRUCK_SPEED, "RIGHT","TREELOG"));
+    this.logDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 150,PLAIN_CAR_SPEED, "RIGHT","TREELOG"));
+    this.logDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 180,PLAIN_CAR_SPEED, "LEFT","TREELOG"));
     // Instantiate the Car Dispatchers (not actually drawn on canvas, just placeholders where the cars come from)
-    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 240,TRUCK_SPEED, "RIGHT","TRUCK"));
-    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 300,RACECAR_SPEED, "RIGHT","RACECAR"));
-    
+    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 270,TRUCK_SPEED, "RIGHT","TRUCK"));
+    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 300,RACECAR_SPEED, "LEFT","RACECAR"));
+    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 330,TRUCK_SPEED, "LEFT","TRUCK"));
+    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 360,RACECAR_SPEED, "RIGHT","RACECAR"));
+
     // Start the animation
         this.addFrameListener(this.animate);
   },
@@ -799,6 +910,9 @@ FroggerGame = Klass(CanvasNode, {
   cleanUpCanvas : function() {
     for(var i=0;i<this.carDispatchers.length;i++){
       this.carDispatchers[i].destroy();
+    }
+    for(var i=0;i<this.logDispatchers.length;i++){
+      this.logDispatchers[i].destroy();
     }
     for(var i=0;i<this.frogReceivers.length;i++){
       this.frogReceivers[i].destroy();
@@ -832,48 +946,24 @@ FroggerGame = Klass(CanvasNode, {
     this.startGame();
   },
   
-  recordDeadFrog : function(){
-    this.frog.runOver();
-    this.scoreboard.scoreKilledFrog();
-    if (this.scoreboard.lives!=0){
-      this.showMessage(FROG_DEATH_MESSAGES[Math.floor(Math.random()*FROG_DEATH_MESSAGES.length)],1000);
-      this.addNewFrog();
-    }
-  },
-
-  recordSafeFrog : function(){
-    this.scoreboard.scoreSafeFrog();
-    this.frogsLeft -= 1;
-    var context = this;
-    if (this.frogsLeft==0){
-      this.showMessage("Nice Job...Starting Level " + (this.scoreboard.level+1),1000);
-      this.nextLevel();
-    } else {
-      this.showMessage(FROG_SAFE_MESSAGES[Math.floor(Math.random()*FROG_SAFE_MESSAGES.length)],1000);
-      this.addNewFrog();
-    }
-  },
-
-  addNewFrog : function(){
-    var context = this;
-    this.paused = true;
-    setTimeout(function(){
-      context.frog = new Frog(context,HEIGHT-10,WIDTH/2);
-      context.scoreboard.updateStats();
-      context.paused = false;
-    },1000)
-  },
-
     key : function(state, name) {
-      this.keys[name] = state;
-    },
-    
+      for(var i=0;i<this.players.length;i++) {
+        this.players[i].keys[name] = state;
+    }
+  },
+
     animate: function(t, dt){
     if (this.paused){
       return false;
     }
     
-    this.frog.animate(t, dt);
+    for(var i=0;i<this.players.length;i++) {
+      this.players[i].frog.animate(t, dt);
+    }
+    for(var i=0;i<this.logDispatchers.length;i++){
+        this.logDispatchers[i].animate(t, dt);
+
+    }
 
       for(var i=0;i<this.carDispatchers.length;i++){
         this.carDispatchers[i].animate(t, dt);
@@ -881,27 +971,31 @@ FroggerGame = Klass(CanvasNode, {
         // Check if the frog got hit by any of the cars
         var cars = this.carDispatchers[i].cars;
         for(var c=0,cc=cars.length;c<cc;c++){
-          if (NodesCollided(cars[c].node,this.frog.node)){
-            this.recordDeadFrog();
+        for(var j=0;j<this.players.length;j++) {
+          if (NodesCollided(cars[c].node,this.players[j].frog.node)){
+            this.players[j].recordDeadFrog();
             break;
           }
         }
       }
+    }
       
-      // The if doesn't event get entered unless the frog breaks the y-axis plane of the receivers at the top
-    if (this.frog.node.y<FROG_RECEIVER_HEIGHT){
+      // The if event doesn't get entered unless the frog breaks the y-axis plane of the receivers at the top
+    for(var i=0;i<this.players.length;i++) {
+      if (this.players[i].frog.node.y<FROG_RECEIVER_HEIGHT){
       for(var r=0,rr=this.frogReceivers.length;r<rr;r++){
-        if(NodesCollided(this.frog.node,this.frogReceivers[r])){
+          if(NodesCollided(this.players[i].frog.node,this.frogReceivers[r])){
           if (this.frogReceivers[r].isEmpty){
-            this.frogReceivers[r].holdFrog(this.frog);
-            this.recordSafeFrog();
+              this.frogReceivers[r].holdFrog(this.players[i].frog);
+              this.players[i].recordSafeFrog();
             break;
           } else {
-            this.recordDeadFrog();
+              this.players[i].recordDeadFrog();
             break;
           }
         }
       }
+    }
     }
     
 

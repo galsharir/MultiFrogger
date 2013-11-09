@@ -88,8 +88,8 @@ a:hover {color:#990000;}
 /*** GAME */
 #leaderboard {position:relative;width:900px;margin:0 auto;padding:30px 0px;height:40px;color:#006600;}
 #score, #lives, #level, #title {position:absolute;}
-#score {right:100px;font-size:200%;}
-#lives {right:0px;padding-left:35px;background: url('../images/frog_icon.png') left top no-repeat;font-size:200%;}
+#score {right:100px;font-size:100%;}
+#lives {right:0px;padding-left:35px;background: url('../images/frog_icon.png') left top no-repeat;font-size:100%;}
 #level {right:100px;font-size:200%;left:420px;}
 #title {font-size:250%;}
 
