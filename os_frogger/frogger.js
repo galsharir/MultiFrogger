@@ -787,7 +787,7 @@ function Player(root, id, name, color) {
       if(player.frog) {
         player.frog.destroy();
       }
-      player.frog = new Frog(context, player, HEIGHT-10, WIDTH/2);
+      player.frog = new Frog(context, player, HEIGHT-10, 428); // 428 - optimal height for RANKS
       context.scoreboard.updateStats();
       context.paused = false;
     },shouldwait?1000:0)
