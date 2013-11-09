@@ -183,26 +183,30 @@ Frog = function(root, player, x, y) {
   } 
 
   this.up = function() {
-    if(this.node.y > 0) {
+    if(this.node.y > 0 && player.moveCounter > 0) {
       this.node.y -= this.node.h*this.speed;
+      player.moveCounter -= this.node.h*this.speed;
     }
   }
   
   this.down = function() {
-    if (this.node.y < HEIGHT){
+    if (this.node.y < HEIGHT && player.moveCounter > 0){
       this.node.y += this.node.h*this.speed;
+      player.moveCounter -= this.node.h*this.speed;
     }
   }
   
   this.moveLeft = function() {
-    if (this.node.x > 0){
+    if (this.node.x > 0 && player.moveCounter > 0){
       this.node.x -= this.node.w*this.speed;
+      player.moveCounter -= this.node.w*this.speed;
     }
   }
   
   this.moveRight = function() { 
-    if (this.node.x < WIDTH){
+    if (this.node.x < WIDTH && player.moveCounter > 0){
       this.node.x += this.node.w*this.speed;
+      player.moveCounter -= this.node.w*this.speed;
     }
   }
 
@@ -766,7 +770,7 @@ function Player(root, id, name, color) {
   this.initialize = function(game) {
     this.addNewFrog(true);
     this.keyState = EVENT_NONE;
-    this.keyTimer = null // TODO: start a timer to move state to None after 1 sec, reset if key is pressed.
+    this.moveCounter = 0;
     this.id = id; // TODO: use this somewhere
     this.name = name;
     this.color = color;
@@ -776,8 +780,13 @@ function Player(root, id, name, color) {
   this.addNewFrog = function(shouldwait){
     var context = this.game;
     var player = this;
+    player.moveCounter = 0;
+    player.keyState = EVENT_NONE;
     context.paused = true;
     setTimeout(function(){
+      if(player.frog) {
+        player.frog.destroy();
+      }
       player.frog = new Frog(context, player, HEIGHT-10, WIDTH/2);
       context.scoreboard.updateStats();
       context.paused = false;
@@ -889,7 +898,6 @@ FroggerGame = Klass(CanvasNode, {
     
   startGame: function() {
 
-    this.players = [];
     this.carDispatchers = [];
     this.logDispatchers = [];
     this.frogReceivers = [];
@@ -985,7 +993,7 @@ FroggerGame = Klass(CanvasNode, {
     for(var i=0;i<this.logDispatchers.length;i++){
         this.logDispatchers[i].animate(t, dt);
     }
-
+/*
     // Check every player
     for(var i=0;i<this.players.length;i++) {
    	   // The if event doesn't get entered unless the frog breaks the y-axis of the water
@@ -1014,6 +1022,7 @@ FroggerGame = Klass(CanvasNode, {
 		    }
 	    }
     }
+    */
 
       for(var i=0;i<this.carDispatchers.length;i++){
         this.carDispatchers[i].animate(t, dt);
@@ -1096,7 +1105,7 @@ init = function() {
         if (e.stopPropagation) e.stopPropagation()
     }
     function KeyUp(e) {
-        OnKey(0,e)
+        //OnKey(0,e)
     }
     function KeyDown(e) {
         OnKey(1,e)
@@ -1129,13 +1138,20 @@ init = function() {
 }
 
 function movePlayer(dbid, move) {
-  FG.players[dbidToPid[dbid]].keyState = move;
+
+  var player = FG.players[dbidToPid[dbid]];
+  player.keyState = move;
+  player.moveCounter = 30;
+//  setTimeout(function(){
+//    player.keyState = EVENT_NONE;
+//    },100);
 }
 
 function addPlayer(dbid, name, color){
   if(dbid in dbidToPid) {
     pid = dbidToPid[dbid];
     if(FG.players[pid].disabled == true) {
+      FG.players[pid].name = name;
       FG.players[pid].disabled = false;
       FG.players[pid].addNewFrog();
       FG.scoreboard.scores[pid] = POINTS_INITIAL;
@@ -1161,8 +1177,10 @@ function updatePlayer(dbid, playerName, playerColor) {
 
 function removePlayer(dbid){
     pid = dbidToPid[dbid];
-    FG.players[pid].disabled = true;
-    FG.players[pid].recordDeadFrog();
+    if(pid) {
+      FG.players[pid].disabled = true;
+      FG.players[pid].recordDeadFrog();
+    }
   }
 
 window.onload = init;
