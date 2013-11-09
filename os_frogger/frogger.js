@@ -475,7 +475,6 @@ CarFactory = {
   },
 
   _makeLog: function(x, y, direction,color){
-  	color = [139,69,19];
     var base_w = PLAIN_CAR_WIDTH
       , base_h = PLAIN_CAR_HEIGHT
       , car = this._makeCarWrapper(x,y,base_w,base_h);
@@ -493,14 +492,25 @@ CarFactory = {
     var path1 = new Path([
       ['moveTo', [x+1*wPart,0]],
       ['lineTo', [x+6*wPart,0]],
-      ['quadraticCurveTo', [x+w,h/2, x+6*wPart,h]],
+      ['quadraticCurveTo', [x+5*wPart,h/2, x+6*wPart,h]],
       ['lineTo', [x+wPart,h]],
       ['quadraticCurveTo', [x+0,h/2, x+wPart,0]]
     ],{
-      fill: color
+      fill: "#8b4513"
     });
 
     car.append(path1);
+
+    //Bottom Left Tire
+    var path2 = new Path([
+        ['moveTo', [x+6*wPart,0]],
+        ['quadraticCurveTo', [x+w,h/2, x+6*wPart,h]],
+     	['quadraticCurveTo', [x+5*wPart,h/2, x+6*wPart,0]],
+      ],{
+        fill:"#cd853f"
+      });
+
+    car.append(path2);
     return car;
   }
 }
@@ -814,6 +824,12 @@ FroggerGame = Klass(CanvasNode, {
     this.bg.fill = GAME_BG_COLOR;
     this.bg.zIndex = -1000;
     this.append(this.bg);
+
+    var water = new Rectangle(WIDTH,260);
+    water.fill = new Gradient({ endX:0, endY:25, colorStops:[[1, "#4169e1"], [0, "#4169e1"]] });
+    water.y = 0;
+    this.append(water);
+
 
     var middleGrass = new Rectangle(WIDTH,50);
     middleGrass.fill = new Gradient({ endX:0, endY:50, colorStops:[[1, "#3b4916"], [0, "#4e601d"]] });
