@@ -35,7 +35,7 @@ var WIDTH                 = 900
   , FROG_RECEIVER_SPACE   = 5
   , FROG_RECEIVER_TOTAL_HEIGHT = FROG_RECEIVER_SPACE + FROG_RECEIVER_HEIGHT
 
-  , NUM_FROG_RECEIVERS    = 5
+  , NUM_FROG_RECEIVERS    = 5 // "Lilys"
 
   , POINTS_FOR_SAFE_FROG  = 100
   , POINTS_FOR_CLEARED_LEVEL = 250
@@ -84,15 +84,15 @@ NodesCollided = function(obj1, obj2){
     return true;
 }
 
-Frog = function(root, x, y) {
+Frog = function(root, player, x, y) {
 
   this.isAlive = true;
-    this.speed = FROG_SPEED;
+    this.speed = FROG_SPEED * Math.random()*2; // TODO: temporary, just so they will be noticed.
     this.initial_points = 0;
     this.points = 0;
   this.animatePosition = 1;
 
-    this.initialize = function(root, x, y) {
+    this.initialize = function(root, player, x, y) {
 
         this.node = new Rectangle(FROG_WIDTH, FROG_HEIGHT);
         this.node.w = FROG_WIDTH;
@@ -114,7 +114,7 @@ Frog = function(root, x, y) {
       ['quadraticCurveTo', [x+5*xPart,y-yPart,    x+4*xPart,y-yPart*2]],
       ['quadraticCurveTo', [x+1*xPart,y-yPart*4,  x+4*xPart,y-yPart*9]],
     ],{
-      fill: FROG_FILL,
+      fill: this.player.color,
       fillOpacity:1
     });
     
@@ -126,7 +126,7 @@ Frog = function(root, x, y) {
       ['lineTo', [x+6*xPart,y-yPart*4]],
       ['lineTo', [x+7*xPart,y-yPart*4]],
     ],{
-      fill: FROG_FILL,
+      fill: this.player.color,
       fillOpacity:1
     });
     
@@ -138,7 +138,7 @@ Frog = function(root, x, y) {
       ['lineTo', [x+4*xPart,y-yPart*4]],
       ['lineTo', [x+3*xPart,y-yPart*4]],
     ],{
-      fill: FROG_FILL,
+      fill: this.player.color,
       fillOpacity:1
     });
 
@@ -159,7 +159,7 @@ Frog = function(root, x, y) {
       ['lineTo', [x+2*xPart,y-yPart*3]],
       ['lineTo', [x+3*xPart,y-yPart*4]],
     ],{
-      fill: FROG_LEGS_FILL,
+      fill: this.player.color,
       fillOpacity:1
     });
 
@@ -224,22 +224,22 @@ Frog = function(root, x, y) {
 
   this.animate = function(t, dt){
 
-    if (this.root.keys["Up"]==1){
+    if (this.player.keys["Up"]==1){
 
       this.handleMove();
       this.up();
 
-    } else if (this.root.keys["Down"]==1){
+    } else if (this.player.keys["Down"]==1){
 
       this.handleMove();
       this.down();
 
-    } else if (this.root.keys["Left"]==1){
+    } else if (this.player.keys["Left"]==1){
 
       this.handleMove();
       this.moveLeft();
 
-    } else if (this.root.keys["Right"]==1){
+    } else if (this.player.keys["Right"]==1){
 
       this.handleMove();
       this.moveRight();
@@ -247,8 +247,9 @@ Frog = function(root, x, y) {
     }
   }
 
+    this.player = player;
     this.root = root;
-    this.initialize(root, x, y);
+    this.initialize(root, player, x, y);
 }
 
 
@@ -692,7 +693,7 @@ Scoreboard = function(root){
   
   this.initialize = function(root){
     this.score = 0;
-    this.lives = 5;
+    this.lives = 500;
     this.level = 1;
     
     this.scoreDiv = document.getElementById("score");
@@ -730,7 +731,54 @@ Scoreboard = function(root){
   this.initialize(root);
 }
 
+function Player(root, id, name, color) {
+  this.initialize = function(game) {
+    this.addNewFrog(true);
+    this.keys = { "Up" : 0, "Down" : 0, "Left" : 0, "Right" : 0 };
+    this.id = id; // TODO: use this somewhere
+    this.name = name; // TODO: use this somewhere
+    this.color = color; // TODO: use this somewhere
+  }
 
+  this.addNewFrog = function(shouldwait){
+    var context = this.game;
+    var player = this;
+    context.paused = true;
+    setTimeout(function(){
+      player.frog = new Frog(context, player, HEIGHT-10, WIDTH/2);
+      context.scoreboard.updateStats();
+      context.paused = false;
+    },shouldwait?1000:0)
+  }
+
+  this.recordDeadFrog = function(){
+    this.frog.runOver();
+    this.game.scoreboard.scoreKilledFrog();
+    if (this.game.scoreboard.lives!=0){
+      this.game.showMessage(this.name + ": " + FROG_DEATH_MESSAGES[Math.floor(Math.random()*FROG_DEATH_MESSAGES.length)],1000);
+      this.addNewFrog(false);
+    }
+  }
+
+  this.recordSafeFrog = function(){
+    this.game.scoreboard.scoreSafeFrog();
+    // TODO: MOVE frogsLEft to player
+    this.game.frogsLeft -= 1;
+
+    if (this.game.frogsLeft==0){
+      this.game.showMessage("Nice Job...Starting Level " + (this.game.scoreboard.level+1),1000);
+      this.game.nextLevel();
+    } else {
+      this.game.showMessage(FROG_SAFE_MESSAGES[Math.floor(Math.random()*FROG_SAFE_MESSAGES.length)],1000);
+      this.addNewFrog(false);
+    }
+  }
+
+
+  this.game = root;
+  this.initialize(this.game);
+
+}
 FroggerGame = Klass(CanvasNode, {
   paused: false,
 
@@ -754,9 +802,6 @@ FroggerGame = Klass(CanvasNode, {
     // number of frogs + targets at the top for frogs to reach
     this.numFrogs = NUM_FROG_RECEIVERS;
     
-    // setup the mapping for catching key presses
-    this.keys = { "Up" : 0, "Down" : 0, "Left" : 0, "Right" : 0, "Ctrl" : 0 };
-
     // show the get ready message while we start things...:
     this.showMessage("Get Ready...",1000);
     
@@ -799,7 +844,11 @@ FroggerGame = Klass(CanvasNode, {
   },
     
   startGame: function() {
-    this.addNewFrog();
+    this.players = [];
+    this.players.push(new Player(this, 0, "Jon", "#ff0000"));
+    this.players.push(new Player(this, 1, "Rob", "#00ff00"));
+    this.players.push(new Player(this, 2, "Eddard", "#0000ff"));
+    
 
     this.carDispatchers = [];
     this.frogReceivers = [];
@@ -868,48 +917,20 @@ FroggerGame = Klass(CanvasNode, {
     this.startGame();
   },
   
-  recordDeadFrog : function(){
-    this.frog.runOver();
-    this.scoreboard.scoreKilledFrog();
-    if (this.scoreboard.lives!=0){
-      this.showMessage(FROG_DEATH_MESSAGES[Math.floor(Math.random()*FROG_DEATH_MESSAGES.length)],1000);
-      this.addNewFrog();
-    }
-  },
-
-  recordSafeFrog : function(){
-    this.scoreboard.scoreSafeFrog();
-    this.frogsLeft -= 1;
-    var context = this;
-    if (this.frogsLeft==0){
-      this.showMessage("Nice Job...Starting Level " + (this.scoreboard.level+1),1000);
-      this.nextLevel();
-    } else {
-      this.showMessage(FROG_SAFE_MESSAGES[Math.floor(Math.random()*FROG_SAFE_MESSAGES.length)],1000);
-      this.addNewFrog();
-    }
-  },
-
-  addNewFrog : function(){
-    var context = this;
-    this.paused = true;
-    setTimeout(function(){
-      context.frog = new Frog(context,HEIGHT-10,WIDTH/2);
-      context.scoreboard.updateStats();
-      context.paused = false;
-    },1000)
-  },
-
     key : function(state, name) {
-      this.keys[name] = state;
-    },
-    
+      for(var i=0;i<this.players.length;i++) {
+        this.players[i].keys[name] = state;
+    }
+  },
+
     animate: function(t, dt){
     if (this.paused){
       return false;
     }
     
-    this.frog.animate(t, dt);
+    for(var i=0;i<this.players.length;i++) {
+      this.players[i].frog.animate(t, dt);
+    }
 
       for(var i=0;i<this.carDispatchers.length;i++){
         this.carDispatchers[i].animate(t, dt);
@@ -917,27 +938,31 @@ FroggerGame = Klass(CanvasNode, {
         // Check if the frog got hit by any of the cars
         var cars = this.carDispatchers[i].cars;
         for(var c=0,cc=cars.length;c<cc;c++){
-          if (NodesCollided(cars[c].node,this.frog.node)){
-            this.recordDeadFrog();
+        for(var j=0;j<this.players.length;j++) {
+          if (NodesCollided(cars[c].node,this.players[j].frog.node)){
+            this.players[j].recordDeadFrog();
             break;
           }
         }
       }
+    }
       
       // The if doesn't event get entered unless the frog breaks the y-axis plane of the receivers at the top
-    if (this.frog.node.y<FROG_RECEIVER_HEIGHT){
+    for(var i=0;i<this.players.length;i++) {
+      if (this.players[i].frog.node.y<FROG_RECEIVER_HEIGHT){
       for(var r=0,rr=this.frogReceivers.length;r<rr;r++){
-        if(NodesCollided(this.frog.node,this.frogReceivers[r])){
+          if(NodesCollided(this.players[i].frog.node,this.frogReceivers[r])){
           if (this.frogReceivers[r].isEmpty){
-            this.frogReceivers[r].holdFrog(this.frog);
-            this.recordSafeFrog();
+              this.frogReceivers[r].holdFrog(this.players[i].frog);
+              this.players[i].recordSafeFrog();
             break;
           } else {
-            this.recordDeadFrog();
+              this.players[i].recordDeadFrog();
             break;
           }
         }
       }
+    }
     }
     
 
