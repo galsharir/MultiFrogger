@@ -876,6 +876,7 @@ FroggerGame = Klass(CanvasNode, {
     
 
     this.carDispatchers = [];
+    this.logDispatchers = [];
     this.frogReceivers = [];
     this.frogsLeft = this.numFrogs;
 
@@ -890,12 +891,12 @@ FroggerGame = Klass(CanvasNode, {
     
     
     // Instantiate the Car Dispatchers on top (not actually drawn on canvas, just placeholders where the cars come from)
-    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 30, RACECAR_SPEED, "LEFT","TREELOG"));
-    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 60, RACECAR_SPEED, "RIGHT","TREELOG"));
-    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 90,TRUCK_SPEED, "LEFT","TREELOG"));
-    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 120,TRUCK_SPEED, "RIGHT","TREELOG"));
-    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 150,PLAIN_CAR_SPEED, "RIGHT","TREELOG"));
-    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 180,PLAIN_CAR_SPEED, "LEFT","TREELOG"));
+    this.logDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 30, RACECAR_SPEED, "LEFT","TREELOG"));
+    this.logDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 60, RACECAR_SPEED, "RIGHT","TREELOG"));
+    this.logDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 90,TRUCK_SPEED, "LEFT","TREELOG"));
+    this.logDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 120,TRUCK_SPEED, "RIGHT","TREELOG"));
+    this.logDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 150,PLAIN_CAR_SPEED, "RIGHT","TREELOG"));
+    this.logDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 180,PLAIN_CAR_SPEED, "LEFT","TREELOG"));
     // Instantiate the Car Dispatchers (not actually drawn on canvas, just placeholders where the cars come from)
     this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 270,TRUCK_SPEED, "RIGHT","TRUCK"));
     this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 300,RACECAR_SPEED, "LEFT","RACECAR"));
@@ -909,6 +910,9 @@ FroggerGame = Klass(CanvasNode, {
   cleanUpCanvas : function() {
     for(var i=0;i<this.carDispatchers.length;i++){
       this.carDispatchers[i].destroy();
+    }
+    for(var i=0;i<this.logDispatchers.length;i++){
+      this.logDispatchers[i].destroy();
     }
     for(var i=0;i<this.frogReceivers.length;i++){
       this.frogReceivers[i].destroy();
@@ -956,6 +960,19 @@ FroggerGame = Klass(CanvasNode, {
     for(var i=0;i<this.players.length;i++) {
       this.players[i].frog.animate(t, dt);
     }
+    for(var i=0;i<this.logDispatchers.length;i++){
+        this.logDispatchers[i].animate(t, dt);
+
+        // Check if the frog got on a log
+        var logs = this.logDispatchers[i].cars;
+        for(var c=0,cc=logs.length;c<cc;c++){
+        for(var j=0;j<this.players.length;j++) {
+          if (NodesCollided(logs[c].node,this.players[j].frog.node)){
+            this.players[j].putFrogOnLog();
+            break;
+          }
+        }
+    }
 
       for(var i=0;i<this.carDispatchers.length;i++){
         this.carDispatchers[i].animate(t, dt);
@@ -972,7 +989,7 @@ FroggerGame = Klass(CanvasNode, {
       }
     }
       
-      // The if doesn't event get entered unless the frog breaks the y-axis plane of the receivers at the top
+      // The if event doesn't get entered unless the frog breaks the y-axis plane of the receivers at the top
     for(var i=0;i<this.players.length;i++) {
       if (this.players[i].frog.node.y<FROG_RECEIVER_HEIGHT){
       for(var r=0,rr=this.frogReceivers.length;r<rr;r++){
