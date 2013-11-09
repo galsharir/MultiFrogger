@@ -506,8 +506,8 @@ CarFactory = {
     //Car body
     var path1 = new Path([
       ['moveTo', [x+1*wPart,0]],
-      ['lineTo', [x+6*wPart,0]],
-      ['quadraticCurveTo', [x+5*wPart,h/2, x+6*wPart,h]],
+      ['lineTo', [x+7*wPart,0]],
+      ['quadraticCurveTo', [x+6*wPart,h/2, x+7*wPart,h]],
       ['lineTo', [x+wPart,h]],
       ['quadraticCurveTo', [x+0,h/2, x+wPart,0]]
     ],{
@@ -516,11 +516,13 @@ CarFactory = {
 
     car.append(path1);
 
-    //Bottom Left Tire
+    //End of log
     var path2 = new Path([
-        ['moveTo', [x+6*wPart,0]],
-        ['quadraticCurveTo', [x+w,h/2, x+6*wPart,h]],
-     	['quadraticCurveTo', [x+5*wPart,h/2, x+6*wPart,0]],
+        ['moveTo', [x+5*wPart,0]],
+        ['lineTo', [x+w,0]],
+        ['quadraticCurveTo', [x+8*wPart,h/2, x+w,h]],
+        ['lineTo', [x+7*wPart,h]],
+     	['quadraticCurveTo', [x+6*wPart,h/2, x+7*wPart,0]],
       ],{
         fill:"#cd853f"
       });
@@ -918,6 +920,7 @@ FroggerGame = Klass(CanvasNode, {
     
     
     // Instantiate the Car Dispatchers on top (not actually drawn on canvas, just placeholders where the cars come from)
+    //this.logDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT , RACECAR_SPEED, "LEFT","TREELOG"));
     this.logDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 30, RACECAR_SPEED, "LEFT","TREELOG"));
     this.logDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 60, RACECAR_SPEED, "RIGHT","TREELOG"));
     this.logDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 90,TRUCK_SPEED, "LEFT","TREELOG"));
@@ -1045,7 +1048,7 @@ FroggerGame = Klass(CanvasNode, {
       
       // The if event doesn't get entered unless the frog breaks the y-axis plane of the receivers at the top
     for(var i=0;i<this.players.length;i++) {
-      if (this.players[i].frog && this.players[i].frog.node.y<FROG_RECEIVER_HEIGHT){
+      if (this.players[i].frog && this.players[i].frog.node.y<FROG_RECEIVER_HEIGHT + 5){
         for(var r=0,rr=this.frogReceivers.length;r<rr;r++){
             if(NodesCollided(this.players[i].frog.node,this.frogReceivers[r])){
             if (this.frogReceivers[r].isEmpty){
