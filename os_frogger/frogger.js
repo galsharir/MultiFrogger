@@ -580,9 +580,9 @@ CarDispatcher = function(root, x, y, speed, direction,type) {
   this.carColor = [Math.floor(Math.random()*255),Math.floor(Math.random()*255),Math.floor(Math.random()*255),1.0];
 
   this.initialize = function(root, x, y, speed, direction,type) {
-    speedMax = 2;
+    speedMax = 3;
     if(root.scoreboard) {
-      speedMax = root.scoreboard.level;
+      speedMax = root.scoreboard.level*2;
     }
 
     this.speed = Math.floor(Math.random()*speedMax+1); 
