@@ -35,7 +35,7 @@ var WIDTH                 = 900
   , FROG_RECEIVER_SPACE   = 5
   , FROG_RECEIVER_TOTAL_HEIGHT = FROG_RECEIVER_SPACE + FROG_RECEIVER_HEIGHT
 
-  , NUM_FROG_RECEIVERS    = 1 // "Lilys"
+  , NUM_FROG_RECEIVERS    = 5 // "Lilys"
 
   , POINTS_FOR_SAFE_FROG  = 100
   , POINTS_FOR_CLEARED_LEVEL = 250
@@ -95,7 +95,7 @@ NodesCollided = function(obj1, obj2){
 Frog = function(root, player, x, y) {
 
   this.isAlive = true;
-    this.speed = FROG_SPEED * (Math.random()*1.5 + 0.5); // TODO: temporary, just so they will be noticed.
+    this.speed = FROG_SPEED; // TODO: temporary, just so they will be noticed.
     this.initial_points = 0;
     this.points = 0;
   this.animatePosition = 1;
@@ -179,26 +179,28 @@ Frog = function(root, player, x, y) {
     this.node.append(this.frogLegs);
 
     this.root.append(this.node);
-  }
+  } 
 
   this.up = function() {
-    this.node.y -= this.node.h*this.speed;
+    if(this.node.y > 0) {
+      this.node.y -= this.node.h*this.speed;
+    }
   }
   
   this.down = function() {
-    if (this.node.y!=HEIGHT){
+    if (this.node.y < HEIGHT){
       this.node.y += this.node.h*this.speed;
     }
   }
   
   this.moveLeft = function() {
-    if (this.node.x!=0){
+    if (this.node.x > 0){
       this.node.x -= this.node.w*this.speed;
     }
   }
   
   this.moveRight = function() { 
-    if (this.node.x!=WIDTH){
+    if (this.node.x < WIDTH){
       this.node.x += this.node.w*this.speed;
     }
   }
@@ -570,7 +572,12 @@ CarDispatcher = function(root, x, y, speed, direction,type) {
   this.carColor = [Math.floor(Math.random()*255),Math.floor(Math.random()*255),Math.floor(Math.random()*255),1.0];
 
   this.initialize = function(root, x, y, speed, direction,type) {
-    this.speed = Math.floor(Math.random()*8+1); 
+    speedMax = 2;
+    if(root.scoreboard) {
+      speedMax = root.scoreboard.level;
+    }
+
+    this.speed = Math.floor(Math.random()*speedMax+1); 
     this.space_between_cars = Math.random()*50+180;
     this.y = y;
     this.x = x;
@@ -1030,8 +1037,10 @@ init = function() {
     document.body.appendChild(d) 
     
     FG = new FroggerGame(c)
-    addPlayer(2, "Jon", "ff0000");
-    addPlayer(4, "Eddard", "00ff00");
+    //addPlayer(1, "Robb", "0000ff");
+    //addPlayer(2, "Jon", "ff0000");
+    //addPlayer(4, "Eddard", "00ff00");
+    openRoom("123");
 
     if (document.addEventListener)
     {
@@ -1114,6 +1123,12 @@ function addPlayer(dbid, name, color){
   }
 }
 
+function updatePlayer(dbid, playerName, playerColor) {
+  pid = dbidToPid[dbid];
+  FG.players[pid].name = playerName;
+  FG.players[pid].color = "#" + playerColor;
+}
+
 function removePlayer(dbid){
     pid = dbidToPid[dbid];
     FG.players[pid].disabled = true;
@@ -1121,4 +1136,3 @@ function removePlayer(dbid){
   }
 
 window.onload = init;
-
