@@ -750,8 +750,8 @@ Scoreboard = function(root){
 
   this.updateStats = function(){
 
-    scoresTxt = "";
-    livesTxt = "";
+    scoresTxt = "Scores:<br/>";
+    livesTxt = "Lives:<br/>";
     for(var i=0; i< this.lives.length; i++) {
       scoresTxt += root.players[i].name + ": " + this.scores[i] + "pts<br/>";
       livesTxt += root.players[i].name + ": x" + this.lives[i] + "<br/>";
@@ -815,7 +815,7 @@ function Player(root, id, name, color) {
       this.game.showMessage("Nice Job...Starting Level " + (this.game.scoreboard.level+1),1000);
       this.game.nextLevel();
     } else {
-      this.game.showMessage(FROG_SAFE_MESSAGES[Math.floor(Math.random()*FROG_SAFE_MESSAGES.length)],1000);
+      this.game.showMessage(this.name + ", " + FROG_SAFE_MESSAGES[Math.floor(Math.random()*FROG_SAFE_MESSAGES.length)],1000);
       this.addNewFrog(false);
     }
   }
@@ -1076,9 +1076,6 @@ init = function() {
     document.body.appendChild(d) 
     
     FG = new FroggerGame(c)
-    //addPlayer(1, "Robb", "0000ff");
-    //addPlayer(2, "Jon", "ff0000");
-    //addPlayer(4, "Eddard", "00ff00");
     openRoom("123");
 
     if (document.addEventListener)
@@ -1140,11 +1137,11 @@ init = function() {
 function movePlayer(dbid, move) {
 
   var player = FG.players[dbidToPid[dbid]];
+  if(!player) {
+    return;
+  }
   player.keyState = move;
   player.moveCounter = 30;
-//  setTimeout(function(){
-//    player.keyState = EVENT_NONE;
-//    },100);
 }
 
 function addPlayer(dbid, name, color){
