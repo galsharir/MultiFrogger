@@ -25,7 +25,17 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 */
 
-
+window.requestAnimFrame = (function(){
+      return  window.requestAnimationFrame       || 
+              window.webkitRequestAnimationFrame || 
+              window.mozRequestAnimationFrame    || 
+              window.oRequestAnimationFrame      || 
+              window.msRequestAnimationFrame     || 
+              function(/* function */ callback, /* DOMElement */ element){
+                window.setTimeout(callback, 1000 / 60);
+              };
+    })();
+ 
 /**
   Delete the first instance of obj from the array.
 
@@ -162,16 +172,6 @@ Array.prototype.allWith = function() {
     a[a.length] = e
   }
   return a
-}
-
-Element.prototype.append = function() {
-  for(var i=0; i<arguments.length; i++) {
-    if (typeof(arguments[i]) == 'string') {
-      this.appendChild(T(arguments[i]))
-    } else {
-      this.appendChild(arguments[i])
-    }
-  }
 }
 
 // some common helper methods
@@ -446,6 +446,15 @@ E = function(name, params, config) {
     }
   }
   return el
+}
+E.append = function(node) {
+  for(var i=1; i<arguments.length; i++) {
+    if (typeof(arguments[i]) == 'string') {
+      node.appendChild(T(arguments[i]))
+    } else {
+      node.appendChild(arguments[i])
+    }
+  }
 }
 // Safari requires each canvas to have a unique id.
 E.lastCanvasId = 0
@@ -3435,8 +3444,11 @@ CanvasNode = Klass(Animatable, Transformable, {
   },
 
   mergeBoundingBoxes : function(bb, bb2) {
+    var obx = bb[0], oby = bb[1]
     if (bb[0] > bb2[0]) bb[0] = bb2[0]
     if (bb[1] > bb2[1]) bb[1] = bb2[1]
+    bb[2] = bb[2] + obx - bb[0]
+    bb[3] = bb[3] + oby - bb[1]
     if (bb[2]+bb[0] < bb2[2]+bb2[0]) bb[2] = bb2[2]+bb2[0]-bb[0]
     if (bb[3]+bb[1] < bb2[3]+bb2[1]) bb[3] = bb2[3]+bb2[1]-bb[1]
   },
@@ -3886,6 +3898,24 @@ Canvas = Klass(CanvasNode, {
       this.freeMouseEvent(this.mouseEvents.pop())
   },
 
+  createFrameLoop : function() {
+    var self = this;
+    var fl = {
+      running : true,
+      stop : function() {
+        this.running = false;
+      },
+      run : function() {
+        if (fl.running) {
+          self.onFrame();
+          requestAnimFrame(fl.run, self.canvas);
+        }
+      }
+    };
+    requestAnimFrame(fl.run, this.canvas);
+    return fl;
+  },
+
   /**
     Start frame loop.
 
@@ -3893,22 +3923,22 @@ Canvas = Klass(CanvasNode, {
     #frameDuration milliseconds.
     */
   play : function() {
-    this.stop()
-    this.realTime = new Date().getTime()
-    this.frameLoop = setInterval(this.frameHandler, this.frameDuration)
-    this.isPlaying = true
+    this.stop();
+    this.realTime = new Date().getTime();
+    this.frameLoop = this.createFrameLoop();
+    this.isPlaying = true;
   },
 
   /**
     Stop frame loop.
     */
   stop : function() {
-    this.__blurStop = false
+    this.__blurStop = false;
     if (this.frameLoop) {
-      clearInterval(this.frameLoop)
-      this.frameLoop = false
+      this.frameLoop.stop();
+      this.frameLoop = null;
     }
-    this.isPlaying = false
+    this.isPlaying = false;
   },
 
   dispatchEvent : function(ev) {
@@ -4475,8 +4505,8 @@ ElementNode = Klass(CanvasNode, {
       this.eHeight = this.element.offsetHeight / ys
     }
     if (wkt && !this.noScaling) {
-      this.element.style.left = Math.floor(x+dx) + 'px'
-      this.element.style.top = Math.floor(y+dy) + 'px'
+      this.element.style.left = Math.floor(dx) + 'px'
+      this.element.style.top = Math.floor(dy) + 'px'
     } else {
       this.element.style.left = Math.floor(x+dx) + 'px'
       this.element.style.top = Math.floor(y+dy) + 'px'
