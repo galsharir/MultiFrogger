@@ -9,7 +9,7 @@ var WIDTH                 = 900
   , FROG_LEGS_FILL        = '#66cc00'
   , FROG_WIDTH            = 30
   , FROG_HEIGHT           = 30
-  , FROG_DEATH_MESSAGES   = ["SPLAT!","OUCH, THAT ONE HURT","ROADKILL!","...AND YOU'RE DEAD","BEEEEEEEP! OUTTA THE WAY!","YEP, THAT WAS A CAR"]
+  , FROG_DEATH_MESSAGES   = ["SPLAT!","OUCH, THAT ONE HURT","...AND YOU'RE DEAD","BEEEEEEEP! OUTTA THE WAY!","YEP, YOU ARE DEAD"]
   , FROG_SAFE_MESSAGES    = ["BOOM-SHAK-A-LACKA!","GOOOOAAAAALLLLLLLL!","ONE SMALL STEP FOR FROG...","SCORE!","YOU MADE IT!","YOU'RE SAFE"]
 
   , CAR_DEFAULT_SPEED     = 0.1
@@ -183,7 +183,7 @@ Frog = function(root, player, x, y) {
   } 
 
   this.up = function() {
-    if(this.node.y > 0 && player.moveCounter > 0) {
+    if(this.node.y > -3 && player.moveCounter > 0) {
       this.node.y -= this.node.h*this.speed;
       player.moveCounter -= this.node.h*this.speed;
     }
@@ -993,12 +993,14 @@ FroggerGame = Klass(CanvasNode, {
     for(var i=0;i<this.logDispatchers.length;i++){
         this.logDispatchers[i].animate(t, dt);
     }
-/*
+
     // Check every player
     for(var i=0;i<this.players.length;i++) {
    	   // The if event doesn't get entered unless the frog breaks the y-axis of the water
       	if ((this.players[i].frog.node.y<FROG_WATER_HEIGHT) &&
       	 (this.players[i].frog.node.y>FROG_RECEIVER_HEIGHT)) {
+
+          var isSafe = false;
 	      	
 	      	// Check all logs to see if its on a log
 	      	for(var j=0;j<this.logDispatchers.length;j++) {
@@ -1008,21 +1010,23 @@ FroggerGame = Klass(CanvasNode, {
 
 		        	// if on a log
 		         	if (NodesCollided(logs[c].node,this.players[i].frog.node)){
-
+                  isSafe = true;
 			            // update x based on direction
-			            if (logs[c].node.direction == "LEFT") {
+			            if (logs[c].direction == "LEFT") {
 			            	this.players[i].frog.node.x -= logs[c].speed;
 			            } else {
 			            	this.players[i].frog.node.x += logs[c].speed;
 			            }
-			        } else {
-			          	this.players[i].recordDeadFrog();
-		          	}
+                  break;
+			        }
 		        }
 		    }
+        if (!isSafe) {
+          this.players[i].recordDeadFrog();
+        }
 	    }
     }
-    */
+    
 
       for(var i=0;i<this.carDispatchers.length;i++){
         this.carDispatchers[i].animate(t, dt);
