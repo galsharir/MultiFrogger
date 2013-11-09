@@ -308,10 +308,16 @@ CarFactory = {
 
     x = (direction=="LEFT") ? 0 : base_w;
 
-    var hPart = h/8;
+    var hPart = h/8,
+     wPart = w/11;
 
     var path1 = new Path([
-        ['moveTo', [x+0   ,hPart*2]],
+        ['moveTo', [x   ,0]],
+        ['lineTo', [x+1*wPart  ,0]],
+        ['quadraticCurveTo', [x+1*wPart,hPart,x+2*wPart,hPart]],
+        ['lineTo', [x+3*wPart  ,2*hPart]],
+        ['quadraticCurveTo', [x+3*wPart  ,1*hPart,x+4*wPart  ,0]],
+
         ['lineTo', [x+2*w/11  ,hPart]],
         ['lineTo', [x+2*w/11  ,0]],
         ['lineTo', [x+4*w/11  ,0]],
@@ -444,6 +450,7 @@ CarFactory = {
     return car
   },
 
+    // Bittle car
   _makePlainCar: function(x, y, direction,color){
     var base_w = PLAIN_CAR_WIDTH
       , base_h = PLAIN_CAR_HEIGHT
@@ -460,28 +467,21 @@ CarFactory = {
 
     //Car body
     var path1 = new Path([
-      ['moveTo', [x+1*wPart,0]],
-      ['lineTo', [x+2*wPart,0]],
-      ['lineTo', [x+2*wPart,hPart]],
-      ['lineTo', [x+3*wPart,hPart]],
-      ['lineTo', [x+3*wPart,0]],
-      ['lineTo', [x+5*wPart,0]],
-      ['lineTo', [x+5*wPart,hPart]],
-      ['lineTo', [x+6*wPart,hPart]],
-      ['lineTo', [x+6*wPart,0]],
-      ['quadraticCurveTo', [x+w,0, x+w,hPart*2]],
-      ['lineTo', [x+w,3*h/4]],
-      ['quadraticCurveTo', [x+w,h, x+6*wPart,h]],
-      ['lineTo', [x+6*wPart,h]],
+      ['moveTo', [x,5*hPart]],
+      ['quadraticCurveTo', [x+0.5*wPart,4.5*hPart, x+1*wPart,4*hPart]],
+      ['quadraticCurveTo', [x+w/2,0, x+6*wPart,4*hPart]],
+      ['lineTo', [x+w,4*hPart]],
+      ['lineTo', [x+w,7*hPart]],
       ['lineTo', [x+6*wPart,7*hPart]],
-      ['lineTo', [x+5*wPart,7*hPart]],
-      ['lineTo', [x+5*wPart,h]],
-      ['lineTo', [x+3*wPart,h]],
+      ['lineTo', [x+6*wPart,8*hPart]],
+      ['lineTo', [x+4*wPart,8*hPart]],
+      ['lineTo', [x+4*wPart,7*hPart]],
       ['lineTo', [x+3*wPart,7*hPart]],
-      ['lineTo', [x+2*wPart,7*hPart]],
-      ['lineTo', [x+2*wPart,h]],
-      ['lineTo', [x+wPart,h]],
-      ['quadraticCurveTo', [x+0,h/2, x+wPart,0]]
+      ['lineTo', [x+3*wPart,8*hPart]],
+      ['lineTo', [x+1*wPart,8*hPart]],
+      ['lineTo', [x+1*wPart,7*hPart]],
+      ['lineTo', [x,7*hPart]],
+      ['lineTo', [x,5*hPart]]
     ],{
       fill: color
     });
@@ -872,12 +872,12 @@ FroggerGame = Klass(CanvasNode, {
 
 
     var middleGrass = new Rectangle(WIDTH,50);
-    middleGrass.fill = new Gradient({ endX:0, endY:50, colorStops:[[1, "#3b4916"], [0, "#4e601d"]] });
+    middleGrass.fill = new Gradient({ endX:0, endY:50, colorStops:[[1, "#FFB90F"], [0, "#FF7F00"]] });
     middleGrass.y = FROG_RECEIVER_TOTAL_HEIGHT + 210;
     this.append(middleGrass);
 
     var bottomGrass = new Rectangle(WIDTH,80);
-    bottomGrass.fill = new Gradient({ endX:0, endY:80, colorStops:[[1, "#3b4916"], [0, "#4e601d"]]});
+    bottomGrass.fill = new Gradient({ endX:0, endY:80, colorStops:[[1, "#228B22"], [0, "#4e601d"]]});
     bottomGrass.y = FROG_RECEIVER_TOTAL_HEIGHT + 390;
     this.append(bottomGrass);
   },
@@ -929,10 +929,10 @@ FroggerGame = Klass(CanvasNode, {
     this.logDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 150,PLAIN_CAR_SPEED, "RIGHT","TREELOG"));
     this.logDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 180,PLAIN_CAR_SPEED, "LEFT","TREELOG"));
     // Instantiate the Car Dispatchers (not actually drawn on canvas, just placeholders where the cars come from)
-    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 270,TRUCK_SPEED, "RIGHT","TRUCK"));
-    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 300,RACECAR_SPEED, "LEFT","RACECAR"));
-    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 330,TRUCK_SPEED, "LEFT","TRUCK"));
-    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 360,RACECAR_SPEED, "RIGHT","RACECAR"));
+    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 270,TRUCK_SPEED, "RIGHT","PLAINCAR"));
+    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 300,RACECAR_SPEED, "LEFT","PLAINCAR"));
+    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 330,TRUCK_SPEED, "LEFT","PLAINCAR"));
+    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 360,RACECAR_SPEED, "RIGHT","PLAINCAR"));
 
     // Start the animation
         this.addFrameListener(this.animate);
