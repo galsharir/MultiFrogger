@@ -31,6 +31,7 @@ var WIDTH                 = 900
   , RACECAR_HEIGHT        = 20
   , RACECAR_SPEED         = .12
 
+  , FROG_WATER_HEIGHT 	  = 230
   , FROG_RECEIVER_HEIGHT  = 25
   , FROG_RECEIVER_SPACE   = 5
   , FROG_RECEIVER_TOTAL_HEIGHT = FROG_RECEIVER_SPACE + FROG_RECEIVER_HEIGHT
@@ -39,8 +40,16 @@ var WIDTH                 = 900
 
   , POINTS_FOR_SAFE_FROG  = 100
   , POINTS_FOR_CLEARED_LEVEL = 250
+  , POINTS_INITIAL = 0
+  , LIVES_INITIAL = 100
 
-  , GAME_BG_COLOR         = '#222';
+  , GAME_BG_COLOR         = '#222'
+  , EVENT_NORTH = 0
+  , EVENT_EAST = 1
+  , EVENT_SOUTH = 2
+  , EVENT_WEST = 3
+  , EVENT_NONE = 4
+  , dbidToPid = {};
 
 
 NodesCollided = function(obj1, obj2){
@@ -87,7 +96,7 @@ NodesCollided = function(obj1, obj2){
 Frog = function(root, player, x, y) {
 
   this.isAlive = true;
-    this.speed = FROG_SPEED * Math.random()*2; // TODO: temporary, just so they will be noticed.
+    this.speed = FROG_SPEED; // TODO: temporary, just so they will be noticed.
     this.initial_points = 0;
     this.points = 0;
   this.animatePosition = 1;
@@ -171,26 +180,28 @@ Frog = function(root, player, x, y) {
     this.node.append(this.frogLegs);
 
     this.root.append(this.node);
-  }
+  } 
 
   this.up = function() {
-    this.node.y -= this.node.h*this.speed;
+    if(this.node.y > 0) {
+      this.node.y -= this.node.h*this.speed;
+    }
   }
   
   this.down = function() {
-    if (this.node.y!=HEIGHT){
+    if (this.node.y < HEIGHT){
       this.node.y += this.node.h*this.speed;
     }
   }
   
   this.moveLeft = function() {
-    if (this.node.x!=0){
+    if (this.node.x > 0){
       this.node.x -= this.node.w*this.speed;
     }
   }
   
   this.moveRight = function() { 
-    if (this.node.x!=WIDTH){
+    if (this.node.x < WIDTH){
       this.node.x += this.node.w*this.speed;
     }
   }
@@ -224,22 +235,22 @@ Frog = function(root, player, x, y) {
 
   this.animate = function(t, dt){
 
-    if (this.player.keys["Up"]==1){
+    if (this.player.keyState == EVENT_NORTH){
 
       this.handleMove();
       this.up();
 
-    } else if (this.player.keys["Down"]==1){
+    } else if (this.player.keyState == EVENT_SOUTH){
 
       this.handleMove();
       this.down();
 
-    } else if (this.player.keys["Left"]==1){
+    } else if (this.player.keyState == EVENT_WEST){
 
       this.handleMove();
       this.moveLeft();
 
-    } else if (this.player.keys["Right"]==1){
+    } else if (this.player.keyState == EVENT_EAST){
 
       this.handleMove();
       this.moveRight();
@@ -555,14 +566,19 @@ Car = function(root, x, y, speed, direction, color, type) {
 
 }
 
-
+// handles one row of cars
 CarDispatcher = function(root, x, y, speed, direction,type) {
   this.speed = CAR_DEFAULT_SPEED;
   this.space_between_cars = 150;
   this.carColor = [Math.floor(Math.random()*255),Math.floor(Math.random()*255),Math.floor(Math.random()*255),1.0];
 
   this.initialize = function(root, x, y, speed, direction,type) {
-    this.speed = Math.floor(Math.random()*8+1); 
+    speedMax = 2;
+    if(root.scoreboard) {
+      speedMax = root.scoreboard.level;
+    }
+
+    this.speed = Math.floor(Math.random()*speedMax+1); 
     this.space_between_cars = Math.random()*50+180;
     this.y = y;
     this.x = x;
@@ -701,10 +717,6 @@ Scoreboard = function(root){
   this.initialize = function(root){
     this.scores = [];
     this.lives = [];
-    for(var i=0; i< root.players.length; i++) {
-      this.scores.push(0);
-      this.lives.push(1000);
-    }
     this.level = 1;
     
     this.scoreDiv = document.getElementById("score");
@@ -736,7 +748,7 @@ Scoreboard = function(root){
 
     scoresTxt = "";
     livesTxt = "";
-    for(var i=0; i< root.players.length; i++) {
+    for(var i=0; i< this.lives.length; i++) {
       scoresTxt += root.players[i].name + ": " + this.scores[i] + "pts<br/>";
       livesTxt += root.players[i].name + ": x" + this.lives[i] + "<br/>";
     }
@@ -753,10 +765,12 @@ Scoreboard = function(root){
 function Player(root, id, name, color) {
   this.initialize = function(game) {
     this.addNewFrog(true);
-    this.keys = { "Up" : 0, "Down" : 0, "Left" : 0, "Right" : 0 };
+    this.keyState = EVENT_NONE;
+    this.keyTimer = null // TODO: start a timer to move state to None after 1 sec, reset if key is pressed.
     this.id = id; // TODO: use this somewhere
     this.name = name;
     this.color = color;
+    this.disabled = false;
   }
 
   this.addNewFrog = function(shouldwait){
@@ -775,13 +789,17 @@ function Player(root, id, name, color) {
     this.game.scoreboard.scoreKilledFrog(this.id);
     if (this.game.scoreboard.lives[this.id]!=0){
       this.game.showMessage(this.name + ": " + FROG_DEATH_MESSAGES[Math.floor(Math.random()*FROG_DEATH_MESSAGES.length)],1000);
-      this.addNewFrog(false);
+
+      // if disabled - don't renew frog
+      if(this.disabled == false) {
+        this.addNewFrog(false);
+      }
     }
   }
 
   this.recordSafeFrog = function(){
     this.game.scoreboard.scoreSafeFrog(this.id);
-    // TODO: MOVE frogsLEft to player
+    
     this.game.frogsLeft -= 1;
 
     if (this.game.frogsLeft==0){
@@ -808,6 +826,7 @@ FroggerGame = Klass(CanvasNode, {
     this.canvas.append(this);
     this.canvas.fixedTimestep = true;
     this.canvas.clear = false;
+    this.players = [];
 
     // setup the background
     this.setupBg();
@@ -869,16 +888,12 @@ FroggerGame = Klass(CanvasNode, {
   },
     
   startGame: function() {
-    this.players = [];
-    this.players.push(new Player(this, 0, "Jon", "#ff0000"));
-    this.players.push(new Player(this, 1, "Rob", "#00ff00"));
-    this.players.push(new Player(this, 2, "Eddard", "#0000ff"));
-    
 
+    this.players = [];
     this.carDispatchers = [];
     this.logDispatchers = [];
     this.frogReceivers = [];
-    this.frogsLeft = this.numFrogs;
+    this.frogsLeft = this.numFrogs; // Number of lilys left
 
     // Add The frog receivers at the top:
     for (var f=0,ff=this.numFrogs;f<ff;f++){
@@ -887,6 +902,10 @@ FroggerGame = Klass(CanvasNode, {
                       FROG_RECEIVER_HEIGHT, 
                       (WIDTH/this.numFrogs),  
                       FROG_RECEIVER_HEIGHT)); 
+    }
+
+    for(var i=0;i<this.players.length;i++){
+      this.players[i].addNewFrog(true);
     }
     
     
@@ -917,6 +936,9 @@ FroggerGame = Klass(CanvasNode, {
     for(var i=0;i<this.frogReceivers.length;i++){
       this.frogReceivers[i].destroy();
     }
+    for(var i=0;i<this.players.length;i++){
+      this.players[i].frog.destroy();
+    }
   },
 
   endGame : function() {
@@ -946,9 +968,9 @@ FroggerGame = Klass(CanvasNode, {
     this.startGame();
   },
   
-    key : function(state, name) {
+    key : function(state) {
       for(var i=0;i<this.players.length;i++) {
-        this.players[i].keys[name] = state;
+        this.players[i].keyState = state;
     }
   },
 
@@ -962,7 +984,35 @@ FroggerGame = Klass(CanvasNode, {
     }
     for(var i=0;i<this.logDispatchers.length;i++){
         this.logDispatchers[i].animate(t, dt);
+    }
 
+    // Check every player
+    for(var i=0;i<this.players.length;i++) {
+   	   // The if event doesn't get entered unless the frog breaks the y-axis of the water
+      	if ((this.players[i].frog.node.y<FROG_WATER_HEIGHT) &&
+      	 (this.players[i].frog.node.y>FROG_RECEIVER_HEIGHT)) {
+	      	
+	      	// Check all logs to see if its on a log
+	      	for(var j=0;j<this.logDispatchers.length;j++) {
+		        var logs = this.logDispatchers[j].cars;
+		        // Check every log on the row
+		        for(var c=0,cc=logs.length;c<cc;c++) {
+
+		        	// if on a log
+		         	if (NodesCollided(logs[c].node,this.players[i].frog.node)){
+
+			            // update x based on direction
+			            if (logs[c].node.direction == "LEFT") {
+			            	this.players[i].frog.node.x -= logs[c].speed;
+			            } else {
+			            	this.players[i].frog.node.x += logs[c].speed;
+			            }
+			        } else {
+			          	this.players[i].recordDeadFrog();
+		          	}
+		        }
+		    }
+	    }
     }
 
       for(var i=0;i<this.carDispatchers.length;i++){
@@ -982,20 +1032,20 @@ FroggerGame = Klass(CanvasNode, {
       
       // The if event doesn't get entered unless the frog breaks the y-axis plane of the receivers at the top
     for(var i=0;i<this.players.length;i++) {
-      if (this.players[i].frog.node.y<FROG_RECEIVER_HEIGHT){
-      for(var r=0,rr=this.frogReceivers.length;r<rr;r++){
-          if(NodesCollided(this.players[i].frog.node,this.frogReceivers[r])){
-          if (this.frogReceivers[r].isEmpty){
-              this.frogReceivers[r].holdFrog(this.players[i].frog);
-              this.players[i].recordSafeFrog();
-            break;
-          } else {
-              this.players[i].recordDeadFrog();
-            break;
+      if (this.players[i].frog && this.players[i].frog.node.y<FROG_RECEIVER_HEIGHT){
+        for(var r=0,rr=this.frogReceivers.length;r<rr;r++){
+            if(NodesCollided(this.players[i].frog.node,this.frogReceivers[r])){
+            if (this.frogReceivers[r].isEmpty){
+                this.frogReceivers[r].holdFrog(this.players[i].frog);
+                this.players[i].recordSafeFrog();
+              break;
+            } else {
+                this.players[i].recordDeadFrog();
+              break;
+            }
           }
         }
       }
-    }
     }
     
 
@@ -1017,6 +1067,10 @@ init = function() {
     document.body.appendChild(d) 
     
     FG = new FroggerGame(c)
+    //addPlayer(1, "Robb", "0000ff");
+    //addPlayer(2, "Jon", "ff0000");
+    //addPlayer(4, "Eddard", "00ff00");
+    openRoom("123");
 
     if (document.addEventListener)
     {
@@ -1056,21 +1110,59 @@ init = function() {
         switch(KeyID)
         {
             case 37:
-                FG.key(state,"Left")
+                FG.key(EVENT_WEST);
                 break;
             case 38:
-                FG.key(state,"Up")
+                FG.key(EVENT_NORTH);
                 break;
             case 39:
-                FG.key(state,"Right")
+                FG.key(EVENT_EAST);
                 break;
             case 40:
-                FG.key(state,"Down")
+                FG.key(EVENT_SOUTH);
                 break;
+            default:
+              FG.key(EVENT_NONE);
         }
+        
     }
 }
 
+function movePlayer(dbid, move) {
+  FG.players[dbidToPid[dbid]].keyState = move;
+}
+
+function addPlayer(dbid, name, color){
+  if(dbid in dbidToPid) {
+    pid = dbidToPid[dbid];
+    if(FG.players[pid].disabled == true) {
+      FG.players[pid].disabled = false;
+      FG.players[pid].addNewFrog();
+      FG.scoreboard.scores[pid] = POINTS_INITIAL;
+      FG.scoreboard.lives[pid] = LIVES_INITIAL;
+    } else {
+      alert("Tried to join as a player which is already playing!");
+    }
+
+  } else {
+    pid = FG.players.length;
+    dbidToPid[dbid] = pid;
+    FG.players.push(new Player(FG, pid, name, "#"+color));
+    FG.scoreboard.scores.push(POINTS_INITIAL);
+    FG.scoreboard.lives.push(LIVES_INITIAL);
+  }
+}
+
+function updatePlayer(dbid, playerName, playerColor) {
+  pid = dbidToPid[dbid];
+  FG.players[pid].name = playerName;
+  FG.players[pid].color = "#" + playerColor;
+}
+
+function removePlayer(dbid){
+    pid = dbidToPid[dbid];
+    FG.players[pid].disabled = true;
+    FG.players[pid].recordDeadFrog();
+  }
 
 window.onload = init;
-
