@@ -697,13 +697,14 @@ FrogReceiver = function(root,x,y,w,h){
 
 
 Scoreboard = function(root){
-  score: 0;
-  lives: 5;
-  level: 1;
   
   this.initialize = function(root){
-    this.score = 0;
-    this.lives = 500;
+    this.scores = [];
+    this.lives = [];
+    for(var i=0; i< root.players.length; i++) {
+      this.scores.push(0);
+      this.lives.push(1000);
+    }
     this.level = 1;
     
     this.scoreDiv = document.getElementById("score");
@@ -711,30 +712,38 @@ Scoreboard = function(root){
     this.levelDiv = document.getElementById("level");
   }
   
-  this.scoreSafeFrog = function(){
-    this.score += POINTS_FOR_SAFE_FROG;
+  this.scoreSafeFrog = function(pid){
+    this.scores[pid] += POINTS_FOR_SAFE_FROG;
     this.updateStats();
   }
 
-  this.scoreKilledFrog = function(){
-    this.lives -= 1;
-    if (this.lives==0){
+  this.scoreKilledFrog = function(pid){
+    this.lives[pid] -= 1;
+    if (this.lives[pid]==0){
       this.updateStats();
       this.root.endGame();
     }
     this.updateStats();
   }
 
-  this.scoreFinishedLevel = function(){
-    this.score += POINTS_FOR_SAFE_FROG;
-    this.score += POINTS_FOR_CLEARED_LEVEL;
+  this.scoreFinishedLevel = function(pid){
+    this.scores[pid] += POINTS_FOR_SAFE_FROG;
+    this.scores[pid] += POINTS_FOR_CLEARED_LEVEL;
     this.level += 1;
   }
 
   this.updateStats = function(){
-    this.scoreDiv.innerHTML = this.score + "pts";
-    this.livesDiv.innerHTML = "x" + this.lives;
-    this.levelDiv.innerHTML = "Level: " + this.level;
+
+    scoresTxt = "";
+    livesTxt = "";
+    for(var i=0; i< root.players.length; i++) {
+      scoresTxt += root.players[i].name + ": " + this.scores[i] + "pts<br/>";
+      livesTxt += root.players[i].name + ": x" + this.lives[i] + "<br/>";
+    }
+    this.scoreDiv.innerHTML = scoresTxt;
+    this.livesDiv.innerHTML = livesTxt;
+
+    this.levelDiv.innerHTML = this.level;
   }
 
   this.root = root;
@@ -746,8 +755,8 @@ function Player(root, id, name, color) {
     this.addNewFrog(true);
     this.keys = { "Up" : 0, "Down" : 0, "Left" : 0, "Right" : 0 };
     this.id = id; // TODO: use this somewhere
-    this.name = name; // TODO: use this somewhere
-    this.color = color; // TODO: use this somewhere
+    this.name = name;
+    this.color = color;
   }
 
   this.addNewFrog = function(shouldwait){
@@ -763,15 +772,15 @@ function Player(root, id, name, color) {
 
   this.recordDeadFrog = function(){
     this.frog.runOver();
-    this.game.scoreboard.scoreKilledFrog();
-    if (this.game.scoreboard.lives!=0){
+    this.game.scoreboard.scoreKilledFrog(this.id);
+    if (this.game.scoreboard.lives[this.id]!=0){
       this.game.showMessage(this.name + ": " + FROG_DEATH_MESSAGES[Math.floor(Math.random()*FROG_DEATH_MESSAGES.length)],1000);
       this.addNewFrog(false);
     }
   }
 
   this.recordSafeFrog = function(){
-    this.game.scoreboard.scoreSafeFrog();
+    this.game.scoreboard.scoreSafeFrog(this.id);
     // TODO: MOVE frogsLEft to player
     this.game.frogsLeft -= 1;
 
@@ -806,9 +815,6 @@ FroggerGame = Klass(CanvasNode, {
     
     this.user = null; // Put fbUser here
     
-    // Add the scoreboard
-    this.scoreboard = new Scoreboard(this);
-    
     // number of frogs + targets at the top for frogs to reach
     this.numFrogs = NUM_FROG_RECEIVERS;
     
@@ -817,6 +823,9 @@ FroggerGame = Klass(CanvasNode, {
     
     // Initialize a new game
     this.startGame();
+
+    // Add the scoreboard
+    this.scoreboard = new Scoreboard(this);
   },
 
   setupBg : function() {
