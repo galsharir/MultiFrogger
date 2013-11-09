@@ -931,7 +931,7 @@ FroggerGame = Klass(CanvasNode, {
     // Instantiate the Car Dispatchers (not actually drawn on canvas, just placeholders where the cars come from)
     this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 270,TRUCK_SPEED, "RIGHT","PLAINCAR"));
     this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 300,RACECAR_SPEED, "LEFT","PLAINCAR"));
-    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 330,TRUCK_SPEED, "LEFT","PLAINCAR"));
+    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 330,PLAINCAR_SPEED, "LEFT","PLAINCAR"));
     this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 360,RACECAR_SPEED, "RIGHT","PLAINCAR"));
 
     // Start the animation
