@@ -238,8 +238,9 @@ Frog = function(root, player, x, y) {
   }
 
   this.animate = function(t, dt){
-
-    if (this.player.keyState == EVENT_NORTH){
+    if(this.player.moveCounter == 0) {
+      this.player.keyState = EVENT_NONE;
+    } else if (this.player.keyState == EVENT_NORTH){
 
       this.handleMove();
       this.up();
