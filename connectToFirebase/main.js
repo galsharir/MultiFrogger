@@ -9,9 +9,7 @@ var STATUS_WRITTEN = 2;
 
 $(document).ready(function(){
   firebaseRef = new Firebase('https://pennexchange-yhack.firebaseio.com/');
-  $("#btnRoom").click(function(){
-    openRoom($("#nameRoom").val());
-  });
+  openRoom('sampleR');
 });
 
 function openRoom(roomName) {
@@ -19,7 +17,7 @@ function openRoom(roomName) {
   if(roomRef != null)
     roomRef.off('child_changed');
   roomRef = firebaseRef.child(roomName);
-  roomRef.child('0/attr').once('value', function(snap){
+  roomRef.child('0/alive').once('value', function(snap){
     if(snap.val() === null) {
       for(var i=0; i<4; i++){
         roomRef.child(i + '/attr').set('');

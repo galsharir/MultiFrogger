@@ -31,7 +31,6 @@ var WIDTH                 = 900
   , RACECAR_HEIGHT        = 20
   , RACECAR_SPEED         = .12
 
-  , FROG_WATER_HEIGHT 	  = 230
   , FROG_RECEIVER_HEIGHT  = 25
   , FROG_RECEIVER_SPACE   = 5
   , FROG_RECEIVER_TOTAL_HEIGHT = FROG_RECEIVER_SPACE + FROG_RECEIVER_HEIGHT
@@ -556,7 +555,7 @@ Car = function(root, x, y, speed, direction, color, type) {
 
 }
 
-// handles one row of cars
+
 CarDispatcher = function(root, x, y, speed, direction,type) {
   this.speed = CAR_DEFAULT_SPEED;
   this.space_between_cars = 150;
@@ -872,8 +871,8 @@ FroggerGame = Klass(CanvasNode, {
   startGame: function() {
     this.players = [];
     this.players.push(new Player(this, 0, "Jon", "#ff0000"));
-    //this.players.push(new Player(this, 1, "Rob", "#00ff00"));
-    //this.players.push(new Player(this, 2, "Eddard", "#0000ff"));
+    this.players.push(new Player(this, 1, "Rob", "#00ff00"));
+    this.players.push(new Player(this, 2, "Eddard", "#0000ff"));
     
 
     this.carDispatchers = [];
@@ -963,35 +962,7 @@ FroggerGame = Klass(CanvasNode, {
     }
     for(var i=0;i<this.logDispatchers.length;i++){
         this.logDispatchers[i].animate(t, dt);
-    }
 
-    // Check every player
-    for(var i=0;i<this.players.length;i++) {
-   	   // The if event doesn't get entered unless the frog breaks the y-axis of the water
-      	if ((this.players[i].frog.node.y<FROG_WATER_HEIGHT) &&
-      	 (this.players[i].frog.node.y>FROG_RECEIVER_HEIGHT)) {
-	      	
-	      	// Check all logs to see if its on a log
-	      	for(var j=0;j<this.logDispatchers.length;j++) {
-		        var logs = this.logDispatchers[j].cars;
-		        // Check every log on the row
-		        for(var c=0,cc=logs.length;c<cc;c++) {
-
-		        	// if on a log
-		         	if (NodesCollided(logs[c].node,this.players[i].frog.node)){
-
-			            // update x based on direction
-			            if (logs[c].node.direction == "LEFT") {
-			            	this.players[i].frog.node.x -= logs[c].speed;
-			            } else {
-			            	this.players[i].frog.node.x += logs[c].speed;
-			            }
-			        } else {
-			          	this.players[i].recordDeadFrog();
-		          	}
-		        }
-		    }
-	    }
     }
 
       for(var i=0;i<this.carDispatchers.length;i++){
