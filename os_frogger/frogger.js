@@ -22,17 +22,17 @@ var WIDTH                 = 900
   , CAR_STROKE_WIDTH      = 2
 
   , PLAIN_CAR_WIDTH       = 80
-  , PLAIN_CAR_HEIGHT      = 40
+  , PLAIN_CAR_HEIGHT      = 20
   , PLAIN_CAR_SPEED       = 0.08
   , TRUCK_WIDTH           = 110
-  , TRUCK_HEIGHT          = 40
+  , TRUCK_HEIGHT          = 20
   , TRUCK_SPEED           = 0.06
   , RACECAR_WIDTH         = 80
-  , RACECAR_HEIGHT        = 40
+  , RACECAR_HEIGHT        = 20
   , RACECAR_SPEED         = .12
 
-  , FROG_RECEIVER_HEIGHT  = 50
-  , FROG_RECEIVER_SPACE   = 10
+  , FROG_RECEIVER_HEIGHT  = 25
+  , FROG_RECEIVER_SPACE   = 5
   , FROG_RECEIVER_TOTAL_HEIGHT = FROG_RECEIVER_SPACE + FROG_RECEIVER_HEIGHT
 
   , NUM_FROG_RECEIVERS    = 5
@@ -265,6 +265,9 @@ CarFactory = {
       case "PLAINCAR":
         return this._makePlainCar(x,y,direction,color);
         break;
+      case "TREELOG":
+        return this._makeLog(x,y,direction,color);
+        break;
     }
   },
 
@@ -440,7 +443,6 @@ CarFactory = {
 
     //Car body
     var path1 = new Path([
-      ['moveTo', [x+0,h]],
       ['moveTo', [x+1*wPart,0]],
       ['lineTo', [x+2*wPart,0]],
       ['lineTo', [x+2*wPart,hPart]],
@@ -461,6 +463,36 @@ CarFactory = {
       ['lineTo', [x+3*wPart,7*hPart]],
       ['lineTo', [x+2*wPart,7*hPart]],
       ['lineTo', [x+2*wPart,h]],
+      ['lineTo', [x+wPart,h]],
+      ['quadraticCurveTo', [x+0,h/2, x+wPart,0]]
+    ],{
+      fill: color
+    });
+
+    car.append(path1);
+    return car;
+  },
+
+  _makeLog: function(x, y, direction,color){
+  	color = [139,69,19];
+    var base_w = PLAIN_CAR_WIDTH
+      , base_h = PLAIN_CAR_HEIGHT
+      , car = this._makeCarWrapper(x,y,base_w,base_h);
+
+    // Reinitialize w / h / x, based on direction
+    var w = (direction=="LEFT") ? base_w : -base_w
+      , h = base_h;
+
+    x = (direction=="LEFT") ? 0 : base_w;
+
+    var wPart = w/7
+      , hPart = h/8;
+
+    //Car body
+    var path1 = new Path([
+      ['moveTo', [x+1*wPart,0]],
+      ['lineTo', [x+6*wPart,0]],
+      ['quadraticCurveTo', [x+w,h/2, x+6*wPart,h]],
       ['lineTo', [x+wPart,h]],
       ['quadraticCurveTo', [x+0,h/2, x+wPart,0]]
     ],{
@@ -740,19 +772,19 @@ FroggerGame = Klass(CanvasNode, {
 
     var middleGrass = new Rectangle(WIDTH,50);
     middleGrass.fill = new Gradient({ endX:0, endY:50, colorStops:[[1, "#3b4916"], [0, "#4e601d"]] });
-    middleGrass.y = FROG_RECEIVER_TOTAL_HEIGHT + 180;
+    middleGrass.y = FROG_RECEIVER_TOTAL_HEIGHT + 210;
     this.append(middleGrass);
 
     var bottomGrass = new Rectangle(WIDTH,80);
     bottomGrass.fill = new Gradient({ endX:0, endY:80, colorStops:[[1, "#3b4916"], [0, "#4e601d"]]});
-    bottomGrass.y = FROG_RECEIVER_TOTAL_HEIGHT + 360;
+    bottomGrass.y = FROG_RECEIVER_TOTAL_HEIGHT + 390;
     this.append(bottomGrass);
   },
 
   setupMessage : function() {
     // Setup the basic message box we'll use for telling the user stuff
     this.message = document.getElementById("message");
-    this.message.style.top = (FROG_RECEIVER_TOTAL_HEIGHT + 225) + "px";
+    this.message.style.top = (FROG_RECEIVER_TOTAL_HEIGHT + 255) + "px";
     this.message.style.left = WINDOW_WIDTH/2-150 + "px";
   },
   
@@ -768,7 +800,7 @@ FroggerGame = Klass(CanvasNode, {
     
   startGame: function() {
     this.addNewFrog();
-    
+
     this.carDispatchers = [];
     this.frogReceivers = [];
     this.frogsLeft = this.numFrogs;
@@ -784,14 +816,18 @@ FroggerGame = Klass(CanvasNode, {
     
     
     // Instantiate the Car Dispatchers on top (not actually drawn on canvas, just placeholders where the cars come from)
-    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT , RACECAR_SPEED, "LEFT","RACECAR"));
-    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 60,TRUCK_SPEED, "LEFT","TRUCK"));
-    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 120,PLAIN_CAR_SPEED, "LEFT","PLAINCAR"));
-    
+    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 30, RACECAR_SPEED, "LEFT","TREELOG"));
+    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 60, RACECAR_SPEED, "RIGHT","TREELOG"));
+    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 90,TRUCK_SPEED, "LEFT","TREELOG"));
+    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 120,TRUCK_SPEED, "RIGHT","TREELOG"));
+    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 150,PLAIN_CAR_SPEED, "RIGHT","TREELOG"));
+    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 180,PLAIN_CAR_SPEED, "LEFT","TREELOG"));
     // Instantiate the Car Dispatchers (not actually drawn on canvas, just placeholders where the cars come from)
-    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 240,TRUCK_SPEED, "RIGHT","TRUCK"));
-    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 300,RACECAR_SPEED, "RIGHT","RACECAR"));
-    
+    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 270,TRUCK_SPEED, "RIGHT","TRUCK"));
+    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 300,RACECAR_SPEED, "LEFT","RACECAR"));
+    this.carDispatchers.push(new CarDispatcher(this, WIDTH, FROG_RECEIVER_TOTAL_HEIGHT + 330,TRUCK_SPEED, "LEFT","TRUCK"));
+    this.carDispatchers.push(new CarDispatcher(this, -100, FROG_RECEIVER_TOTAL_HEIGHT + 360,RACECAR_SPEED, "RIGHT","RACECAR"));
+
     // Start the animation
         this.addFrameListener(this.animate);
   },
