@@ -1,3 +1,4 @@
+
 var WIDTH                 = 900
   , HEIGHT                = 500
 
@@ -31,7 +32,7 @@ var WIDTH                 = 900
   , RACECAR_HEIGHT        = 20
   , RACECAR_SPEED         = .12
 
-  , FROG_WATER_HEIGHT 	  = 230
+  , FROG_WATER_HEIGHT     = 230
   , FROG_RECEIVER_HEIGHT  = 25
   , FROG_RECEIVER_SPACE   = 5
   , FROG_RECEIVER_TOTAL_HEIGHT = FROG_RECEIVER_SPACE + FROG_RECEIVER_HEIGHT
@@ -523,7 +524,7 @@ CarFactory = {
         ['lineTo', [x+w,0]],
         ['quadraticCurveTo', [x+8*wPart,h/2, x+w,h]],
         ['lineTo', [x+7*wPart,h]],
-     	['quadraticCurveTo', [x+6*wPart,h/2, x+7*wPart,0]],
+      ['quadraticCurveTo', [x+6*wPart,h/2, x+7*wPart,0]],
       ],{
         fill:"#cd853f"
       });
@@ -580,9 +581,9 @@ CarDispatcher = function(root, x, y, speed, direction,type) {
   this.carColor = [Math.floor(Math.random()*255),Math.floor(Math.random()*255),Math.floor(Math.random()*255),1.0];
 
   this.initialize = function(root, x, y, speed, direction,type) {
-    speedMax = 3;
+    speedMax = 2;
     if(root.scoreboard) {
-      speedMax = root.scoreboard.level*2;
+      speedMax = root.scoreboard.level;
     }
 
     this.speed = Math.floor(Math.random()*speedMax+1); 
@@ -1000,35 +1001,35 @@ FroggerGame = Klass(CanvasNode, {
 
     // Check every player
     for(var i=0;i<this.players.length;i++) {
-   	   // The if event doesn't get entered unless the frog breaks the y-axis of the water
-      	if ((this.players[i].frog.node.y<FROG_WATER_HEIGHT) &&
-      	 (this.players[i].frog.node.y>FROG_RECEIVER_HEIGHT)) {
+       // The if event doesn't get entered unless the frog breaks the y-axis of the water
+        if ((this.players[i].frog.node.y<FROG_WATER_HEIGHT) &&
+         (this.players[i].frog.node.y>FROG_RECEIVER_HEIGHT)) {
 
           var isSafe = false;
-	      	
-	      	// Check all logs to see if its on a log
-	      	for(var j=0;j<this.logDispatchers.length;j++) {
-		        var logs = this.logDispatchers[j].cars;
-		        // Check every log on the row
-		        for(var c=0,cc=logs.length;c<cc;c++) {
+          
+          // Check all logs to see if its on a log
+          for(var j=0;j<this.logDispatchers.length;j++) {
+            var logs = this.logDispatchers[j].cars;
+            // Check every log on the row
+            for(var c=0,cc=logs.length;c<cc;c++) {
 
-		        	// if on a log
-		         	if (NodesCollided(logs[c].node,this.players[i].frog.node)){
+              // if on a log
+              if (NodesCollided(logs[c].node,this.players[i].frog.node)){
                   isSafe = true;
-			            // update x based on direction
-			            if (logs[c].direction == "LEFT") {
-			            	this.players[i].frog.node.x -= logs[c].speed;
-			            } else {
-			            	this.players[i].frog.node.x += logs[c].speed;
-			            }
+                  // update x based on direction
+                  if (logs[c].direction == "LEFT") {
+                    this.players[i].frog.node.x -= logs[c].speed;
+                  } else {
+                    this.players[i].frog.node.x += logs[c].speed;
+                  }
                   break;
-			        }
-		        }
-		    }
+              }
+            }
+        }
         if (!isSafe) {
           this.players[i].recordDeadFrog();
         }
-	    }
+      }
     }
     
 
